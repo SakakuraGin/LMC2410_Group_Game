@@ -18,15 +18,17 @@ public class PlayerMovement : MonoBehaviour
 
     float defaultSpawnTime = 3f;
     float spawnTime = 3f;
-    [SerializeField] private GameObject obj;
+    [SerializeField] private GameObject bg;
     [SerializeField] private GameObject canvas;
     [SerializeField] private GameObject teleport;
+    private string cyan = "cyan";
+    private string magenta = "magenta";
     private Color def = new Color(0.0f, 0.3541925f, 0.4867924f, 1f);
     private Color defSafe = new Color(0.182079f, 0.4037736f, 0.221417f, 1f);
     private Color red = new Color(0.5320754f, 0.09537195f, 0.1113978f, 1f);
     private Color sphere = new Color(0.5843138f, 0.8666667f, 0.9921569f, 1f);
     private Color fakeSphere = new Color(0.5843138f, 0.8666667f, 0.9921569f, 0f);
-    private Color temp;
+    private string temp;
     private bool safe = true;
     private int counter = 5;
     private Vector2 pos;
@@ -53,8 +55,8 @@ public class PlayerMovement : MonoBehaviour
         teleBody = teleport.GetComponent<Rigidbody2D>();
         grounded = true;
 
-        temp = def;
-        obj.GetComponent<SpriteRenderer>().color = def;
+        temp = cyan;
+        //obj.GetComponent<SpriteRenderer>().color = def; //unneeded with new background
         pos = new Vector2(0, 0);
         locked = false;
         boost = false;
@@ -105,26 +107,38 @@ public class PlayerMovement : MonoBehaviour
                 tele = false;
             }
             Debug.Log("Nice");
-            
+
         }
 
         spawnTime -= Time.deltaTime;
+        // can we delete this?
         // if (spawnTime < 2.8f) {
         //     // obj.GetComponent<SpriteRenderer>().color = temp;
         //     obj.GetComponent<SpriteRenderer>().color = def;
         //     boost = false;
         // }
-        obj.GetComponent<SpriteRenderer>().color = temp;
+
+        //bg.GetComponent<SpriteRenderer>().color = temp;
+        // Change background sprite with the rhythm
+        bg.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("farthest-" + temp);
+        bg.transform.GetChild(1).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("farthest-" + temp);
+        bg.transform.GetChild(2).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("far-" + temp);
+        bg.transform.GetChild(3).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("far-" + temp);
+        bg.transform.GetChild(4).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("close-" + temp);
+        bg.transform.GetChild(5).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("close-" + temp);
+        bg.transform.GetChild(6).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("closest-" + temp);
+        bg.transform.GetChild(7).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("closest-" + temp);
+        
         if ((spawnTime < 0.7f && spawnTime < 0.8f) || (spawnTime > 2.3f && spawnTime < 2.2f)) {
-            temp = red;
+            temp = magenta;
             if (tele && Input.GetKeyDown(KeyCode.Space)) {
                 Debug.Log("timed");
                 teleBody.velocity = teleBody.velocity + new Vector2(4f, 0);
             }
         } else {
-            temp = def;
+            temp = cyan;
         }
-        
+        // can we delete this?
         // if (safe && Input.GetKey(KeyCode.LeftShift)) {
         //     Debug.Log("Lock");
         //     locked = true;
@@ -153,7 +167,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
     }
-
+    /*
     private void OnTriggerEnter2D(Collider2D col) {
         safe = true;
         pos = col.gameObject.transform.position;
@@ -166,6 +180,7 @@ public class PlayerMovement : MonoBehaviour
         temp = def;
         Debug.Log("Not safe");
     }
+    */
 
     private void Jump() {
         body.velocity = new Vector2(body.velocity.x, jumpSpeed);
