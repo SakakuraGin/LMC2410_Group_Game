@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -79,6 +80,10 @@ public class PlayerMovement : MonoBehaviour
     }
 
     private void Update() {
+
+        if (Input.GetKeyDown(KeyCode.R)) {
+            SceneManager.LoadScene("SampleScene");
+        }
 
         float horizontalInput = Input.GetAxis("Horizontal");
         if (horizontalInput != 0 && !locked) {
@@ -176,20 +181,19 @@ public class PlayerMovement : MonoBehaviour
         }
 
     }
-    /*
+
     private void OnTriggerEnter2D(Collider2D col) {
-        safe = true;
-        pos = col.gameObject.transform.position;
-        temp = defSafe;
-        Debug.Log(col.gameObject.transform.position);
+        if (col.gameObject.tag == "DeathPlane") {
+            SceneManager.LoadScene("SampleScene");
+        }
+        // Debug.Log(col.gameObject.transform.position);
     }
 
-    private void OnTriggerExit2D() {
-        safe = false;
-        temp = def;
-        Debug.Log("Not safe");
-    }
-    */
+    // private void OnTriggerExit2D() {
+    //     safe = false;
+    //     temp = def;
+    //     Debug.Log("Not safe");
+    // }
 
     private void Jump() {
         body.velocity = new Vector2(body.velocity.x, jumpSpeed);
