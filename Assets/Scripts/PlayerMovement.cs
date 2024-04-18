@@ -36,6 +36,9 @@ public class PlayerMovement : MonoBehaviour
     private bool boost;
     private bool fail;
     private bool tele;
+    private bool warped;
+    private bool pressingDown;
+    private bool swapped;
 
 
     private int swap;
@@ -62,6 +65,9 @@ public class PlayerMovement : MonoBehaviour
         boost = false;
         fail = false;
         tele = false;
+        warped = false;
+        pressingDown = false;
+        swapped = false;
 
         swap = 0;
         redBlock = GameObject.Find("Red");
@@ -75,10 +81,10 @@ public class PlayerMovement : MonoBehaviour
     private void Update() {
 
         float horizontalInput = Input.GetAxis("Horizontal");
-        if (boost) {
-            body.velocity = body.velocity + (new Vector2(.1f, 0));
-        } else if (!locked) {
+        if (horizontalInput != 0 && !locked) {
             body.velocity = new Vector2(horizontalInput * speed, body.velocity.y);
+        } else {
+            body.velocity = new Vector2(0, body.velocity.y);
         }
 
         if (Input.GetKey(KeyCode.Space)) {
@@ -87,17 +93,35 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
+        if (Input.GetKeyDown(KeyCode.S)) {
+            pressingDown = true;
+        }
+        if (Input.GetKeyUp(KeyCode.S)) {
+            pressingDown = false;
+        }
 
+        // When key is pressed, teleport action happens
         if (Input.GetKeyDown(KeyCode.LeftShift)) {
             if (!tele) {
                 tele = true;
-                teleBody.position = body.position + new Vector2(1, 1);
+                locked = true;
+                Vector2 dropVec = new Vector2(1, 1);
+                Vector2 veloVec = new Vector2(10, 10);
+
+                // When pressing down, drop ball next to player.
+                if (pressingDown) {
+                    dropVec = new Vector2(1, 0);
+                    veloVec = new Vector2(0, 0);
+                }
+            
+                // Setup position, color, collider, and rigidbody.
+                teleBody.position = body.position + dropVec;
                 teleport.GetComponent<SpriteRenderer>().color = sphere;
                 teleport.GetComponent<Collider2D>().enabled = true;
                 teleBody.constraints = RigidbodyConstraints2D.None;
-                locked = true;
 
-                teleBody.velocity = new Vector2(10, 10);
+                teleBody.velocity = veloVec;
+
             } else {
                 teleport.GetComponent<SpriteRenderer>().color = fakeSphere;
                 teleport.GetComponent<Collider2D>().enabled = false;
@@ -106,17 +130,10 @@ public class PlayerMovement : MonoBehaviour
                 locked = false;
                 tele = false;
             }
-            Debug.Log("Nice");
 
         }
 
         spawnTime -= Time.deltaTime;
-        // can we delete this?
-        // if (spawnTime < 2.8f) {
-        //     // obj.GetComponent<SpriteRenderer>().color = temp;
-        //     obj.GetComponent<SpriteRenderer>().color = def;
-        //     boost = false;
-        // }
 
         //bg.GetComponent<SpriteRenderer>().color = temp;
         // Change background sprite with the rhythm
@@ -131,39 +148,31 @@ public class PlayerMovement : MonoBehaviour
         
         if ((spawnTime < 0.7f && spawnTime < 0.8f) || (spawnTime > 2.3f && spawnTime < 2.2f)) {
             temp = magenta;
-            if (tele && Input.GetKeyDown(KeyCode.Space)) {
-                Debug.Log("timed");
-                teleBody.velocity = teleBody.velocity + new Vector2(4f, 0);
+            if (!swapped) {
+                swapBlocks();
+                swapped = true;
+            }
+            
+            if (tele) {
+                if (Input.GetKeyDown(KeyCode.Space)) {
+                    Debug.Log("timed");
+                    teleBody.velocity += new Vector2(4f, 0);
+                }
+                if (!warped && Input.GetKeyDown(KeyCode.Return)) {
+                    teleBody.position += new Vector2(3f, 0);
+                    warped = true;
+                }
             }
         } else {
+            warped = false;
             temp = cyan;
+            swapped = false;
         }
-        // can we delete this?
-        // if (safe && Input.GetKey(KeyCode.LeftShift)) {
-        //     Debug.Log("Lock");
-        //     locked = true;
-        //     body.position = pos - (new Vector2(0, 0.33f));
-        //     body.velocity = new Vector2(0, 0);
-        // }
-        // if (spawnTime < 0.5f) {
-        //     teleBody.velocity = teleBody.velocity + new Vector2(1, 0);
-        //     obj.GetComponent<SpriteRenderer>().color = red;
-        // }
+
         if (spawnTime < 0) {
-            swapBlocks();
+            // swapBlocks();
             // obj.GetComponent<SpriteRenderer>().color = red;
             spawnTime = defaultSpawnTime;
-            if (!safe) {
-                // canvas.SetActive(true);
-                // temp = red;
-                // locked = true;
-                // fail = true;
-                // body.velocity = new Vector2(0, 0);
-            } else if (locked && !fail) {
-                body.velocity = new Vector2((speed / 2.0f), 5);
-                boost = true;
-                locked = false;
-            }
         }
 
     }
