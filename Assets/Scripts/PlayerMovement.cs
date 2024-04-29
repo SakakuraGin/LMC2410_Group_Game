@@ -10,7 +10,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float jumpSpeed;
     private Rigidbody2D body;
     private Rigidbody2D teleBody;
-    private bool grounded;
+    //private bool grounded;
 
     private bool tele1;
     private bool tele2;
@@ -58,10 +58,22 @@ public class PlayerMovement : MonoBehaviour
     private float beatTime = 1.28f; // seconds between beats
     private float prevTime;
 
+    // character and animator
+    private GameObject character;
+    private Animator charaAnim;
+
+    // raycast grounded check params
+    [SerializeField] private Vector2 boxSize;
+    [SerializeField] private float castDistance;
+    [SerializeField] private LayerMask groundLayer;
+
+    // make "dropVec" a param
+    private Vector2 dropVec;
+
     private void Awake() {
         body = GetComponent<Rigidbody2D>();
         teleBody = teleport.GetComponent<Rigidbody2D>();
-        grounded = true;
+        //grounded = true;
 
         temp = cyan;
         pos = new Vector2(0, 0);
@@ -81,6 +93,9 @@ public class PlayerMovement : MonoBehaviour
         teleport.GetComponent<SpriteRenderer>().color = fakeSphere;
         audioSource = GetComponent<AudioSource>();
 
+        // initialize character object and its animator
+        character = this.gameObject.transform.GetChild(0).gameObject;
+        charaAnim = character.GetComponent<Animator>();
     }
 
     private void Update() {
@@ -92,12 +107,22 @@ public class PlayerMovement : MonoBehaviour
         float horizontalInput = Input.GetAxis("Horizontal");
         if (horizontalInput != 0 && !locked) {
             body.velocity = new Vector2(horizontalInput * speed, body.velocity.y);
+            
+            // animator for moving and correct direction
+            charaAnim.SetBool("isRunning", true);
+            if (horizontalInput > 0)
+                charaAnim.SetFloat("Direction", 0);
+            else if (horizontalInput < 0)
+                charaAnim.SetFloat("Direction", 1);
         } else {
             body.velocity = new Vector2(0, body.velocity.y);
+            
+            // animator for idle
+            charaAnim.SetBool("isRunning", false);
         }
 
         if (Input.GetKey(KeyCode.Space)) {
-            if (grounded && !locked && !tele) {
+            if (isGrounded() && !locked && !tele) {
                 Jump();
             }
         }
@@ -112,10 +137,25 @@ public class PlayerMovement : MonoBehaviour
         // When key is pressed, teleport action happens
         if (Input.GetKeyDown(KeyCode.LeftShift)) {
             if (!tele) {
+                // shoot teleporter by mouse direction
+                var mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                var mouseWorld2D = new Vector2(mouseWorldPos.x, mouseWorldPos.y);
+                var diffVec = mouseWorld2D - body.position;
+
+                // set vectors and animator direction by mouse position
                 tele = true;
                 locked = true;
-                Vector2 dropVec = new Vector2(1, 1);
-                Vector2 veloVec = new Vector2(10, 10);
+                Vector2 veloVec = diffVec.normalized * 14.14f;
+                if (diffVec.x < 0)
+                {
+                    dropVec = new Vector2(-1, 1);
+                    charaAnim.SetFloat("Direction", 1);
+                }
+                else if (diffVec.x > 0)
+                {
+                    dropVec = new Vector2(1, 1);
+                    charaAnim.SetFloat("Direction", 0);
+                }
 
                 // When pressing down, drop ball next to player.
                 if (pressingDown) {
@@ -130,7 +170,9 @@ public class PlayerMovement : MonoBehaviour
                 teleBody.constraints = RigidbodyConstraints2D.None;
 
                 teleBody.velocity = veloVec;
-
+                
+                // animator for throwing teleporter
+                charaAnim.SetTrigger("isThrowing");
             } else {
                 teleport.GetComponent<SpriteRenderer>().color = fakeSphere;
                 teleport.GetComponent<Collider2D>().enabled = false;
@@ -189,6 +231,15 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
+        // animator "jump" when not grounded
+        if (!isGrounded())
+        {
+            if (!charaAnim.GetBool("isJumping"))
+                charaAnim.SetBool("isJumping", true);
+        } else
+        {
+            charaAnim.SetBool("isJumping", false);
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D col) {
@@ -206,13 +257,41 @@ public class PlayerMovement : MonoBehaviour
 
     private void Jump() {
         body.velocity = new Vector2(body.velocity.x, jumpSpeed);
-        grounded = false;
+        //grounded = false;
     }
 
-    private void OnCollisionEnter2D(Collision2D collision) {
-        if (collision.gameObject.tag == "Ground") {
-            grounded = true;
+    //private void OnCollisionEnter2D(Collision2D collision) {
+    //    if (collision.gameObject.tag == "Ground") {
+    //        grounded = true;
+    //        charaAnim.SetBool("isJumping", false);
+    //    }
+    //}
+
+    //private void OnCollisionExit2D(Collision2D collision)
+    //{
+    //    if (collision.gameObject.tag == "Ground")
+    //    {
+    //        grounded = false;
+    //        charaAnim.SetBool("isJumping", true);
+    //    }
+    //}
+
+    // check grounded with raycast
+    private bool isGrounded()
+    {
+        if(Physics2D.BoxCast(transform.position, boxSize, 0, -transform.up, castDistance, groundLayer))
+        {
+            return true;
+        } else
+        {
+            return false;
         }
+    }
+
+    // raycast gizmos
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawWireCube(transform.position - transform.up * castDistance, boxSize);
     }
 
     private void swapBlocks() {
