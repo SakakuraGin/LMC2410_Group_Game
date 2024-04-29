@@ -16,9 +16,9 @@ public class PlayerMovement : MonoBehaviour
     private bool tele2;
     private bool tele3;
     private bool tele4;
-
-    float defaultSpawnTime = 3f;
-    float spawnTime = 3f;
+    
+    float defaultSpawnTime = 2.46f; // time between beats * 2
+    float spawnTime;
     [SerializeField] private GameObject bg;
     [SerializeField] private GameObject canvas;
     [SerializeField] private GameObject teleport;
@@ -52,15 +52,18 @@ public class PlayerMovement : MonoBehaviour
     private Color blueB = new Color(0.390566f, 0.4451497f, 1f, 0.3f);
     private Color greenA = new Color(0.1893556f, 0.7433963f, 0.2781564f, 1f);
     private Color greenB = new Color(0.1893556f, 0.7433963f, 0.2781564f, 0.3f);
+    private AudioSource audioSource;
+    private float timeSinceSwap = 0f;
+    private float firstBeatTime = 0.754f; // seconds before first beat
+    private float beatTime = 1.28f; // seconds between beats
+    private float prevTime;
 
     private void Awake() {
-
         body = GetComponent<Rigidbody2D>();
         teleBody = teleport.GetComponent<Rigidbody2D>();
         grounded = true;
 
         temp = cyan;
-        //obj.GetComponent<SpriteRenderer>().color = def; //unneeded with new background
         pos = new Vector2(0, 0);
         locked = false;
         boost = false;
@@ -76,6 +79,7 @@ public class PlayerMovement : MonoBehaviour
         greenBlock = GameObject.Find("Green");
 
         teleport.GetComponent<SpriteRenderer>().color = fakeSphere;
+        audioSource = GetComponent<AudioSource>();
 
     }
 
@@ -138,46 +142,51 @@ public class PlayerMovement : MonoBehaviour
 
         }
 
-        spawnTime -= Time.deltaTime;
+        timeSinceSwap += audioSource.time - prevTime;
+        prevTime = audioSource.time;
 
-        //bg.GetComponent<SpriteRenderer>().color = temp;
-        // Change background sprite with the rhythm
-        bg.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("farthest-" + temp);
-        bg.transform.GetChild(1).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("farthest-" + temp);
-        bg.transform.GetChild(2).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("far-" + temp);
-        bg.transform.GetChild(3).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("far-" + temp);
-        bg.transform.GetChild(4).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("close-" + temp);
-        bg.transform.GetChild(5).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("close-" + temp);
-        bg.transform.GetChild(6).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("closest-" + temp);
-        bg.transform.GetChild(7).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("closest-" + temp);
-        
-        if ((spawnTime < 0.7f && spawnTime < 0.8f) || (spawnTime > 2.3f && spawnTime < 2.2f)) {
-            temp = magenta;
-            if (!swapped) {
+        // color change
+        Debug.Log(audioSource.time);
+        if (timeSinceSwap >= beatTime || audioSource.time == firstBeatTime)
+        {
+            if (swapped)
+            {
+                temp = magenta;
                 swapBlocks();
+                swapped = false;
+            } else
+            {
+                temp = cyan;
+                warped = false;
                 swapped = true;
             }
-            
-            if (tele) {
-                if (Input.GetKeyDown(KeyCode.Space)) {
-                    Debug.Log("timed");
-                    teleBody.velocity += new Vector2(4f, 0);
-                }
-                if (!warped && Input.GetKeyDown(KeyCode.Return)) {
-                    teleBody.position += new Vector2(3f, 0);
-                    warped = true;
-                }
-            }
-        } else {
-            warped = false;
-            temp = cyan;
-            swapped = false;
+            // Change background sprite
+            bg.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("farthest-" + temp);
+            bg.transform.GetChild(1).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("farthest-" + temp);
+            bg.transform.GetChild(2).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("far-" + temp);
+            bg.transform.GetChild(3).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("far-" + temp);
+            bg.transform.GetChild(4).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("close-" + temp);
+            bg.transform.GetChild(5).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("close-" + temp);
+            bg.transform.GetChild(6).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("closest-" + temp);
+            bg.transform.GetChild(7).gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("closest-" + temp);
+
+            timeSinceSwap = 0f;
         }
 
-        if (spawnTime < 0) {
-            // swapBlocks();
-            // obj.GetComponent<SpriteRenderer>().color = red;
-            spawnTime = defaultSpawnTime;
+
+        // time with the beat
+        if (swapped && tele)
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                Debug.Log("timed");
+                teleBody.velocity += new Vector2(4f, 0);
+            }
+            if (!warped && Input.GetKeyDown(KeyCode.Return))
+            {
+                teleBody.position += new Vector2(3f, 0);
+                warped = true;
+            }
         }
 
     }
