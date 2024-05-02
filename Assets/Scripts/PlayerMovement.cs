@@ -207,8 +207,9 @@ public class PlayerMovement : MonoBehaviour
 
 
         // time with the beat
-        if ((spawnTime > 0.7f && spawnTime < 1.15f) || (spawnTime < 2.65f && spawnTime > 2.2f)) {
+        if ((spawnTime > 0.65f && spawnTime < 1.1f) || (spawnTime < 2.60f && spawnTime > 2.15f)) {
             temp = magenta;
+            teleport.gameObject.transform.GetChild(0).gameObject.GetComponent<Animator>().SetFloat("OnBeat", 1);
             if (!swapped) {
                 swapBlocks();
                 swapped = true;
@@ -225,6 +226,7 @@ public class PlayerMovement : MonoBehaviour
                 }
             }
         } else {
+            teleport.gameObject.transform.GetChild(0).gameObject.GetComponent<Animator>().SetFloat("OnBeat", 0);
             warped = false;
             temp = cyan;
             swapped = false;
