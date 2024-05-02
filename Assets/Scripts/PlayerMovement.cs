@@ -91,6 +91,7 @@ public class PlayerMovement : MonoBehaviour
         greenBlock = GameObject.Find("Green");
 
         teleport.GetComponent<SpriteRenderer>().color = fakeSphere;
+        teleport.gameObject.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().enabled = false;
         audioSource = GetComponent<AudioSource>();
 
         // initialize character object and its animator
@@ -166,6 +167,7 @@ public class PlayerMovement : MonoBehaviour
                 // Setup position, color, collider, and rigidbody.
                 teleBody.position = body.position + dropVec;
                 teleport.GetComponent<SpriteRenderer>().color = sphere;
+                teleport.gameObject.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().enabled = true;
                 teleport.GetComponent<Collider2D>().enabled = true;
                 teleBody.constraints = RigidbodyConstraints2D.None;
 
@@ -175,6 +177,7 @@ public class PlayerMovement : MonoBehaviour
                 charaAnim.SetTrigger("isThrowing");
             } else {
                 teleport.GetComponent<SpriteRenderer>().color = fakeSphere;
+                teleport.gameObject.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().enabled = false;
                 teleport.GetComponent<Collider2D>().enabled = false;
                 teleBody.constraints = RigidbodyConstraints2D.FreezePosition;
                 body.position = teleBody.position;
@@ -195,11 +198,13 @@ public class PlayerMovement : MonoBehaviour
             {
                 temp = magenta;
                 swapBlocks();
+                teleport.gameObject.transform.GetChild(0).gameObject.GetComponent<Animator>().SetFloat("OnBeat", 1);
                 swapped = false;
             } else
             {
                 temp = cyan;
                 warped = false;
+                teleport.gameObject.transform.GetChild(0).gameObject.GetComponent<Animator>().SetFloat("OnBeat", 0);
                 swapped = true;
             }
             // Change background sprite
