@@ -26,6 +26,13 @@ public class CameraMovement : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.LeftShift)) {
             swapTarget();
         }
+
+        if (Input.GetKeyDown(KeyCode.Tab)) {
+            if (swap) {
+                target = player;
+                swap = false;
+            }
+        }
     }
 
     public void swapTarget() {

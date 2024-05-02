@@ -141,6 +141,17 @@ public class PlayerMovement : MonoBehaviour
             pressingDown = false;
         }
 
+        if (Input.GetKeyDown(KeyCode.Tab)) {
+            if (tele) {
+                teleport.GetComponent<SpriteRenderer>().color = fakeSphere;
+                teleport.gameObject.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().enabled = false;
+                teleport.GetComponent<Collider2D>().enabled = false;
+                teleBody.constraints = RigidbodyConstraints2D.FreezePosition;
+                locked = false;
+                tele = false;
+            }
+        }
+
         // When key is pressed, teleport action happens
         if (Input.GetKeyDown(KeyCode.LeftShift)) {
             if (!tele) {
